@@ -5,7 +5,7 @@ const genAI = new GoogleGenerativeAI(apiKey);
 
 // Use Gemini Flash Model (Correct for 2024–2025)
 const model = genAI.getGenerativeModel({
-  model: "gemini-1.5-flash",
+  model: "gemini-1.5-flash-001",
 });
 
 /* ======================================================

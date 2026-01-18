@@ -1,47 +1,77 @@
-'use client';
+"use client";
 
-import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { useAuthStore } from '@/store/authStore';
-import { Navbar } from '@/components/layout/Navbar';
-import { Chatbot } from '@/components/ai/Chatbot';
-import { motion } from 'framer-motion';
+import { useState } from "react";
 
 export default function ChatbotPage() {
-  const router = useRouter();
-  const { user, loading } = useAuthStore();
+  const [input, setInput] = useState("");
+  const [messages, setMessages] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    if (!loading && !user) {
-      router.push('/auth/signin');
+  async function sendMessage() {
+    if (!input.trim()) return;
+
+    console.log("📤 Sending message:", input);
+
+    setMessages((prev) => [...prev, { sender: "user", text: input }]);
+    const userMsg = input;
+    setInput("");
+    setLoading(true);
+
+    try {
+      const res = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: userMsg }),
+      });
+
+      console.log("📥 Raw API Response:", res);
+
+      const data = await res.json();
+      console.log("🔍 Parsed Response:", data);
+
+      if (data.error) {
+        console.error("🚨 API Error:", data.error);
+        alert("AI Error: " + data.error);
+        setMessages((prev) => [...prev, { sender: "bot", text: "❌ Error: " + data.error }]);
+      } else {
+        setMessages((prev) => [...prev, { sender: "bot", text: data.reply }]);
+      }
+    } catch (err: any) {
+      console.error("🔥 Chatbot Crash:", err);
+      alert("Chatbot crashed: " + err.message);
+      setMessages((prev) => [...prev, { sender: "bot", text: "❌ Crash: " + err.message }]);
     }
-  }, [user, loading, router]);
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
-      </div>
-    );
+    setLoading(false);
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
-      <Navbar />
-      <div className="container mx-auto px-4 py-8">
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mb-6"
-        >
-          <h1 className="text-4xl font-bold mb-2">AI Assistant</h1>
-          <p className="text-muted-foreground">
-            Get help with blood donation, emergency procedures, and health information
+    <div className="p-4 max-w-2xl mx-auto">
+      <h1 className="text-2xl font-bold mb-4">AI Chatbot (Debug Mode)</h1>
+
+      <div className="border rounded p-3 h-[400px] overflow-y-auto bg-white shadow">
+        {messages.map((m, idx) => (
+          <p key={idx} className={m.sender === "user" ? "text-blue-600" : "text-green-600"}>
+            <b>{m.sender}:</b> {m.text}
           </p>
-        </motion.div>
-        <div className="max-w-4xl mx-auto">
-          <Chatbot />
-        </div>
+        ))}
+        {loading && <p className="text-gray-500">⏳ Thinking...</p>}
+      </div>
+
+      <div className="flex gap-2 mt-4">
+        <input
+          className="border p-2 flex-1 rounded"
+          placeholder="Ask something..."
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+        />
+
+        <button
+          className="bg-blue-600 text-white px-4 py-2 rounded"
+          onClick={sendMessage}
+        >
+          Send
+        </button>
       </div>
     </div>
   );
