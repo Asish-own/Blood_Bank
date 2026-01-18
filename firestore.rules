@@ -1,0 +1,80 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Users collection
+    match /users/{userId} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // Hospitals collection
+    match /hospitals/{hospitalId} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null && 
+        (request.auth.uid == hospitalId || 
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'hospital');
+    }
+
+    // Ambulances collection
+    match /ambulances/{ambulanceId} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null && 
+        (request.auth.uid == ambulanceId || 
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'ambulance');
+    }
+
+    // SOS Cases collection
+    match /SOS_cases/{caseId} {
+      allow read: if request.auth != null;
+      allow create: if request.auth != null;
+      allow update: if request.auth != null && (
+        request.auth.uid == resource.data.userId ||
+        request.auth.uid == resource.data.ambulanceId ||
+        request.auth.uid == resource.data.hospitalId ||
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['ambulance', 'hospital']
+      );
+    }
+
+    // Donations collection
+    match /donations/{donationId} {
+      allow read: if request.auth != null;
+      allow create: if request.auth != null;
+      allow update: if request.auth != null && (
+        request.auth.uid == resource.data.donorId ||
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'hospital'
+      );
+    }
+
+    // Appointments collection
+    match /appointments/{appointmentId} {
+      allow read: if request.auth != null;
+      allow create: if request.auth != null;
+      allow update: if request.auth != null && (
+        request.auth.uid == resource.data.doctorId ||
+        request.auth.uid == resource.data.patientId
+      );
+    }
+
+    // Appointment slots collection
+    match /appointment_slots/{slotId} {
+      allow read: if request.auth != null;
+      allow create: if request.auth != null && 
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'doctor';
+      allow update: if request.auth != null;
+    }
+
+    // Donors collection
+    match /donors/{donorId} {
+      allow read: if request.auth != null;
+      allow create: if true; // Public registration
+      allow update: if request.auth != null;
+    }
+
+    // Blood requests collection
+    match /blood_requests/{requestId} {
+      allow read: if request.auth != null;
+      allow create: if true; // Public registration
+      allow update: if request.auth != null;
+    }
+  }
+}
