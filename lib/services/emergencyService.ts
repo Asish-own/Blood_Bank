@@ -1,6 +1,6 @@
 import { collection, addDoc, doc, updateDoc, getDocs, query, where, onSnapshot } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
-import { selectBestHospital, calculateGHSScore } from '@/lib/gemini/client';
+import { selectBestHospital, calculateGHSScore } from '@/lib/gemini/client_gemini_backup';
 import { calculateDistance } from '@/lib/utils';
 
 export interface SOSCase {

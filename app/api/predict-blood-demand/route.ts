@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { predictBloodDemand } from '@/lib/gemini/client';
+import { predictBloodDemand } from '@/lib/gemini/client_gemini_backup';
 
 export async function POST(request: NextRequest) {
   try {

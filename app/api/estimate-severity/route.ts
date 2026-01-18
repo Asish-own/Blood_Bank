@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { estimateAccidentSeverity } from '@/lib/gemini/client';
+import { estimateAccidentSeverity } from '@/lib/gemini/client_gemini_backup';
 
 export async function POST(request: NextRequest) {
   try {
